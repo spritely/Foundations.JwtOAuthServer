@@ -64,7 +64,7 @@ namespace Spritely.Foundations.JwtOAuthServer.Test
         }
 
         [Test]
-        public async Task Authenticator_recieves_credentials_supplied_to_service()
+        public async Task Authenticator_receives_credentials_supplied_to_service()
         {
             var substitutes = new Substitutes();
             substitutes.LoginForm["username"] = "testuser@mydomain.com";
@@ -75,8 +75,11 @@ namespace Spritely.Foundations.JwtOAuthServer.Test
                 await server.CreateRequest("/token").PostFormAsync(substitutes.LoginForm);
             }
 
-            substitutes.Authenticator.Received().SignIn(Arg.Is<Credentials>(
-                c => c.UserName == "testuser@mydomain.com" && c.Password == "50m3P@ssw0rd" && c.AuthenticationType == "JWT"));
+            substitutes.Authenticator.Received().SignIn(
+                Arg.Is<Credentials>(
+                    c =>
+                        c.UserName == "testuser@mydomain.com" && c.Password == "50m3P@ssw0rd" &&
+                        c.AuthenticationType == "JWT"));
         }
 
         [Test]
@@ -171,7 +174,8 @@ namespace Spritely.Foundations.JwtOAuthServer.Test
             public Substitutes()
             {
                 ServerSettings.AllowInsecureHttp = true;
-                ServerSettings.AllowedClients.Add(new JwtOAuthClient { Id = "valid_client_id", Secret = "JkgHgUR3npkGFrHOXOph1R_NBtp6GikiWv_CKNt_xXU" });
+                ServerSettings.AllowedClients.Add(
+                    new JwtOAuthClient {Id = "valid_client_id", Secret = "JkgHgUR3npkGFrHOXOph1R_NBtp6GikiWv_CKNt_xXU"});
             }
         }
 
@@ -194,14 +198,13 @@ namespace Spritely.Foundations.JwtOAuthServer.Test
 
     internal static class TestServerExtensions
     {
-        public static async Task<HttpResponseMessage> PostFormAsync(this RequestBuilder request, IEnumerable<KeyValuePair<string, string>> formValues)
+        public static async Task<HttpResponseMessage> PostFormAsync(
+            this RequestBuilder request,
+            IEnumerable<KeyValuePair<string, string>> formValues)
         {
             var response = await request
                 .AddHeader("Content-Type", "application/x-www-form-urlencoded")
-                .And(r =>
-                {
-                    r.Content = new FormUrlEncodedContent(formValues);
-                })
+                .And(r => { r.Content = new FormUrlEncodedContent(formValues); })
                 .PostAsync();
 
             return response;
