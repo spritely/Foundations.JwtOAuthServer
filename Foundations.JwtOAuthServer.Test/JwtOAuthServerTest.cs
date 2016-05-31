@@ -9,6 +9,7 @@ namespace Spritely.Foundations.JwtOAuthServer.Test
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Net;
     using System.Net.Http;
     using System.Security.Claims;
@@ -83,7 +84,7 @@ namespace Spritely.Foundations.JwtOAuthServer.Test
         }
 
         [Test]
-        public async Task Token_response_contains_invalid_grant_when_authenticator_returns_null_identity()
+        public async Task Token_response_contains_invalid_grant_when_Authenticator_returns_null_identity()
         {
             var substitutes = new Substitutes();
 
@@ -97,7 +98,7 @@ namespace Spritely.Foundations.JwtOAuthServer.Test
         }
 
         [Test]
-        public async Task Token_response_contains_invalid_grant_when_authenticator_throws_an_exception()
+        public async Task Token_response_contains_invalid_grant_when_Authenticator_throws_an_exception()
         {
             var substitutes = new Substitutes();
             substitutes.Authenticator.SignIn(Arg.Any<Credentials>())
@@ -114,7 +115,7 @@ namespace Spritely.Foundations.JwtOAuthServer.Test
         }
 
         [Test]
-        public async Task Token_response_contains_token_when_authenticator_returns_an_identity()
+        public async Task Token_response_contains_token_when_Authenticator_returns_an_identity()
         {
             var substitutes = new Substitutes();
             substitutes.Authenticator.SignIn(Arg.Any<Credentials>()).Returns(new ClaimsIdentity());
@@ -175,16 +176,19 @@ namespace Spritely.Foundations.JwtOAuthServer.Test
             {
                 ServerSettings.AllowInsecureHttp = true;
                 ServerSettings.AllowedClients.Add(
-                    new JwtOAuthClient {Id = "valid_client_id", Secret = "JkgHgUR3npkGFrHOXOph1R_NBtp6GikiWv_CKNt_xXU"});
+                    new JwtOAuthClient { Id = "valid_client_id", Secret = "JkgHgUR3npkGFrHOXOph1R_NBtp6GikiWv_CKNt_xXU" });
             }
         }
 
         private static TestServer CreateTestServerWith(InitializeContainer initializeContainer)
         {
+            BasicWebApiLogPolicy.Log = Console.WriteLine;
+            Start.Initialize();
+
             var server = TestServer.Create(
                 app =>
                 {
-                    Start.Initialize();
+                    Trace.Listeners.Remove("HostingTraceListener");
 
                     app.UseSettingsContainerInitializer()
                         .UseJwtOAuthServerContainerInitializer()
