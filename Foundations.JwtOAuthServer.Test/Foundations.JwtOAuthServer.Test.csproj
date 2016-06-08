@@ -102,8 +102,8 @@
       <HintPath>..\packages\SimpleInjector.Integration.WebApi.3.1.5\lib\net45\SimpleInjector.Integration.WebApi.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Spritely.Foundations.WebApi, Version=0.8.2.22, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Spritely.Foundations.WebApi.0.8.2\lib\net461\Spritely.Foundations.WebApi.dll</HintPath>
+    <Reference Include="Spritely.Foundations.WebApi, Version=0.8.3.23, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Spritely.Foundations.WebApi.0.8.3\lib\net461\Spritely.Foundations.WebApi.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
