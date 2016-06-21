@@ -11,8 +11,11 @@ namespace Spritely.Foundations.JwtOAuthServer
     using System.Globalization;
     using System.IdentityModel.Tokens;
     using System.Linq;
+    using System.Security.Cryptography;
+    using Jose;
     using Microsoft.Owin.Security;
     using Microsoft.Owin.Security.DataHandler.Encoder;
+    using Spritely.Foundations.WebApi;
 
     /// <summary>
     /// Formats an authentication ticket as a JSON Web token.
@@ -71,6 +74,18 @@ namespace Spritely.Foundations.JwtOAuthServer
                     Messages.Exception_JwtAccessTokenFormat_InvalidClientId, clientId));
             }
 
+            if (client.RelativeFileCertificate != null && client.StoreCertificate != null)
+            {
+                throw new InvalidOperationException(Messages.Exception_JwtAccessTokenFormat_MultipleCertificateOptionsProvided);
+            }
+
+            var certificateFetcher =
+                client.RelativeFileCertificate != null
+                    ? new FileCertificateFetcher(client.RelativeFileCertificate)
+                    : client.StoreCertificate != null
+                        ? new StoreByThumbprintCertificateFetcher(client.StoreCertificate)
+                        : null as ICertificateFetcher;
+
             var securityKey = TextEncodings.Base64Url.Decode(client.Secret);
 
             var issued = data.Properties.IssuedUtc?.UtcDateTime;
@@ -80,12 +95,17 @@ namespace Spritely.Foundations.JwtOAuthServer
                 HmacSha512Signature,
                 Sha512Digest);
 
-            var token = new JwtSecurityToken(serverSettings.Issuer ?? string.Empty, clientId, data.Identity.Claims,
-                issued, expires, signingCredentials);
+            var token = new JwtSecurityToken(serverSettings.Issuer ?? string.Empty, clientId, data.Identity.Claims, issued, expires, signingCredentials);
             var handler = new JwtSecurityTokenHandler();
             var jwt = handler.WriteToken(token);
 
-            return jwt;
+            var publicKey = certificateFetcher?.Fetch()?.PublicKey.Key as RSACryptoServiceProvider;
+
+            var finalJwt = publicKey != null
+                ? JWT.Encode(jwt, publicKey, JweAlgorithm.RSA_OAEP_256, JweEncryption.A256GCM, JweCompression.DEF)
+                : jwt;
+
+            return finalJwt;
         }
 
         /// <summary>

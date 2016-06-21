@@ -70,6 +70,15 @@ namespace Spritely.Foundations.JwtOAuthServer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to JwtOAuthServerSettings allowedClients can only specify zero or one certificates to load - either a storeCertificate, relativeFileCertificate, or neither (for unencrypted JWT tokens), but not both..
+        /// </summary>
+        internal static string Exception_JwtAccessTokenFormat_MultipleCertificateOptionsProvided {
+            get {
+                return ResourceManager.GetString("Exception_JwtAccessTokenFormat_MultipleCertificateOptionsProvided", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Authentication ticket does not have an audience (client id) property.
         /// </summary>
         internal static string Exception_JwtAccessTokenFormat_NoAudience {

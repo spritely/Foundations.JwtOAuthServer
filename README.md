@@ -57,48 +57,86 @@ public class Authenticator : IAuthenticator
 Now you just need to register the authenticator in the dependency injection container and start up the server as follows:
 
 ```csharp
-    public class Startup
+public class Startup
+{
+    private static void InitializeContainer(Container container)
     {
-        private static void InitializeContainer(Container container)
-        {
-            // Your repository might need more setup...
-            container.Register<IAuthRepository, MyAuthRepository>();
-            container.Register<IAuthenticator, Authenticator>();
-        }
+        // Your repository might need more setup...
+        container.Register<IAuthRepository, MyAuthRepository>();
+        container.Register<IAuthenticator, Authenticator>();
+    }
 
-        public static void Configuration(IAppBuilder app)
-        {
-            Start.Initialize();
+    public static void Configuration(IAppBuilder app)
+    {
+        Start.Initialize();
 
-            // This registers a method to be called when the container is initialized
-            app.UseContainerInitializer(InitializeContainer)
-              // Setup Its.Config - see Spritely.Foundations.WebApi for more
-              .UseSettingsContainerInitializer()
+        // This registers a method to be called when the container is initialized
+        app.UseContainerInitializer(InitializeContainer)
+            // Setup Its.Config - see Spritely.Foundations.WebApi for more
+            .UseSettingsContainerInitializer()
               
-              // Setup the dependency injection container for JWT OAuth server
-              .UseJwtOAuthServerContainerInitializer()
+            // Setup the dependency injection container for JWT OAuth server
+            .UseJwtOAuthServerContainerInitializer()
               
-              // Start the JWT OAuth Server
-              .UseJwtOAuthServer();
-      }
+            // Start the JWT OAuth Server
+            .UseJwtOAuthServer();
+    }
 
-      public static void Main()
-      {
-          Start.Console<Startup>();
-      }
-  }
-  ```
+    public static void Main()
+    {
+        Start.Console<Startup>();
+    }
+}
+```
   
-  Nearly done. We need the App.config and HostingSettings.json from https://github.com/spritely/Foundations.WebApi and a JwtOAuthServerSettings.json similar to:
+Nearly done. We need the App.config and HostingSettings.json from https://github.com/spritely/Foundations.WebApi and a JwtOAuthServerSettings.json similar to:
   
-  ```json
-  {
+```json
+{
     "accessTokenExpireTimeSpan": "1.00:00:00",
     "issuer": "https://auth.mydomain.com",
     "allowedClients": [
         {
             "id": "my.client.id.typically.mydomain.com",
             "secret": "JkgHgUR3npkGFrHOXOph1R_NBtp6GikiWv_CKNt_xXU"
+        }
+    ]
+}
+```
+
+Each allowedClient also supports using an X509 certificate to encrypt the JWT tokens. To enable use one of the following two options depending on if you want to load the certificate from a file:
+
+```json
+{
+    "accessTokenExpireTimeSpan": "1.00:00:00",
+    "issuer": "https://auth.mydomain.com",
+    "allowedClients": [
+        {
+            "id": "my.client.id.typically.mydomain.com",
+            "secret": "JkgHgUR3npkGFrHOXOph1R_NBtp6GikiWv_CKNt_xXU",
+            "relativeFileCertificate": {
+                "relativeFilePath": "/Certificates/MyCertificate.pfx",
+                "password": "my-password",
+                "keyStorageFlags": "machineKeySet, exportable"
+            }
+        }
+    ]
+}
+```
+
+or from the Windows store (but you cannot use both for a single client):
+
+```json
+{
+    "accessTokenExpireTimeSpan": "1.00:00:00",
+    "issuer": "https://auth.mydomain.com",
+    "allowedClients": [
+        {
+            "id": "my.client.id.typically.mydomain.com",
+            "secret": "JkgHgUR3npkGFrHOXOph1R_NBtp6GikiWv_CKNt_xXU",
+            "storeCertificate": {
+                "certificateThumbprint": "aa1234...."
+            }
         }
     ]
 }

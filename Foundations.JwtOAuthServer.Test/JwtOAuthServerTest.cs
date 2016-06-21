@@ -10,15 +10,22 @@ namespace Spritely.Foundations.JwtOAuthServer.Test
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Security.Claims;
+    using System.Security.Cryptography;
+    using System.Security.Cryptography.X509Certificates;
+    using System.Text;
     using System.Threading.Tasks;
+    using Jose;
     using Microsoft.Owin.Testing;
+    using Newtonsoft.Json;
     using NSubstitute;
     using NSubstitute.ExceptionExtensions;
     using NUnit.Framework;
     using Spritely.Foundations.WebApi;
+    using Spritely.Recipes;
 
     [TestFixture]
     public class JwtOAuthServerTest
@@ -144,6 +151,45 @@ namespace Spritely.Foundations.JwtOAuthServer.Test
 
                 Assert.That(content, Contains.Substring(@"""expires_in"":21"));
             }
+        }
+
+        [Test]
+        public async Task Token_response_is_encrypted_when_certificate_provided()
+        {
+            var relativeFileCertificate = new RelativeFileCertificate
+            {
+                BasePath = AppDomain.CurrentDomain.BaseDirectory,
+                RelativeFilePath = "Certificates\\TestCertificate.pfx",
+                Password = "Test".ToSecureString(),
+                KeyStorageFlags = X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet
+            };
+            var certificateFetcher = new FileCertificateFetcher(relativeFileCertificate);
+            var privateKey = certificateFetcher.Fetch().PrivateKey as RSACryptoServiceProvider;
+            var substitutes = new Substitutes();
+            substitutes.ServerSettings.AllowedClients.First().RelativeFileCertificate = relativeFileCertificate;
+            substitutes.Authenticator.SignIn(Arg.Any<Credentials>()).Returns(new ClaimsIdentity());
+
+            using (var server = CreateTestServerWith(substitutes.InitializeContainer))
+            {
+                var response = await server.CreateRequest("/token").PostFormAsync(substitutes.LoginForm);
+                var content = await response.Content.ReadAsStringAsync();
+                var tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(content);
+                var jwt = JWT.Decode(tokenResponse.access_token, privateKey);
+                var parts = jwt.Split('.').Select(s => Encoding.UTF8.GetString(Base64Url.Decode(s))).ToList();
+
+                Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                Assert.That(parts.Count, Is.EqualTo(3));
+                Assert.That(parts.Skip(1).First(), Contains.Substring(@"""aud"":""valid_client_id"""));
+            }
+        }
+
+        private class TokenResponse
+        {
+            public string access_token { get; set; }
+
+            public string token_type { get; set; }
+
+            public int expires_in { get; set; }
         }
 
         private class Substitutes

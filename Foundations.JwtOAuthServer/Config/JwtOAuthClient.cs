@@ -7,6 +7,8 @@
 
 namespace Spritely.Foundations.JwtOAuthServer
 {
+    using Spritely.Foundations.WebApi;
+
     /// <summary>
     /// Describes a JWT OAuth client.
     /// </summary>
@@ -23,5 +25,21 @@ namespace Spritely.Foundations.JwtOAuthServer
         /// </summary>
         /// <value>The secret.</value>
         public string Secret { get; set; }
+
+        /// <summary>
+        /// Gets or sets the relative file certificate.
+        /// </summary>
+        /// <value>
+        /// The relative file certificate.
+        /// </value>
+        public RelativeFileCertificate RelativeFileCertificate { get; set; }
+
+        /// <summary>
+        /// Gets or sets the store certificate.
+        /// </summary>
+        /// <value>
+        /// The store certificate.
+        /// </value>
+        public StoreCertificate StoreCertificate { get; set; }
     }
 }
