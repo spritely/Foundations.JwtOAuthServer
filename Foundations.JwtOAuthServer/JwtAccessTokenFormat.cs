@@ -79,6 +79,27 @@ namespace Spritely.Foundations.JwtOAuthServer
                 throw new InvalidOperationException(Messages.Exception_JwtAccessTokenFormat_MultipleCertificateOptionsProvided);
             }
 
+            var jwe = GetJwe(data, client, clientId);
+
+            return jwe;
+        }
+
+        private string GetJwe(AuthenticationTicket data, JwtOAuthClient client, string clientId)
+        {
+            var certificateFetcher = GetCertificateFetcher(client);
+            var jwt = GetJwt(data, client, clientId);
+
+            var publicKey = certificateFetcher?.Fetch()?.PublicKey.Key as RSACryptoServiceProvider;
+
+            var jwe = publicKey != null
+                ? JWT.Encode(jwt, publicKey, JweAlgorithm.RSA_OAEP_256, JweEncryption.A256GCM, JweCompression.DEF)
+                : jwt;
+
+            return jwe;
+        }
+
+        private static ICertificateFetcher GetCertificateFetcher(JwtOAuthClient client)
+        {
             var certificateFetcher =
                 client.RelativeFileCertificate != null
                     ? new FileCertificateFetcher(client.RelativeFileCertificate)
@@ -86,26 +107,33 @@ namespace Spritely.Foundations.JwtOAuthServer
                         ? new StoreByThumbprintCertificateFetcher(client.StoreCertificate)
                         : null as ICertificateFetcher;
 
+            return certificateFetcher;
+        }
+
+        private string GetJwt(AuthenticationTicket data, JwtOAuthClient client, string clientId)
+        {
             var securityKey = TextEncodings.Base64Url.Decode(client.Secret);
 
             var issued = data.Properties.IssuedUtc?.UtcDateTime;
             var expires = data.Properties.ExpiresUtc?.UtcDateTime;
+
             var signingCredentials = new SigningCredentials(
                 new InMemorySymmetricSecurityKey(securityKey),
                 HmacSha512Signature,
                 Sha512Digest);
 
-            var token = new JwtSecurityToken(serverSettings.Issuer ?? string.Empty, clientId, data.Identity.Claims, issued, expires, signingCredentials);
+            var token = new JwtSecurityToken(
+                serverSettings.Issuer ?? string.Empty,
+                clientId,
+                data.Identity.Claims,
+                issued,
+                expires,
+                signingCredentials);
+
             var handler = new JwtSecurityTokenHandler();
             var jwt = handler.WriteToken(token);
 
-            var publicKey = certificateFetcher?.Fetch()?.PublicKey.Key as RSACryptoServiceProvider;
-
-            var finalJwt = publicKey != null
-                ? JWT.Encode(jwt, publicKey, JweAlgorithm.RSA_OAEP_256, JweEncryption.A256GCM, JweCompression.DEF)
-                : jwt;
-
-            return finalJwt;
+            return jwt;
         }
 
         /// <summary>
