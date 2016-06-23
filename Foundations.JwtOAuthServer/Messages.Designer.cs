@@ -61,6 +61,15 @@ namespace Spritely.Foundations.JwtOAuthServer {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to load certificate specified by JwtOAuthServerSettings allowedClients with Id = &apos;{0}&apos;..
+        /// </summary>
+        internal static string Exception_JwtAccessTokenFormat_CertificateNotFound {
+            get {
+                return ResourceManager.GetString("Exception_JwtAccessTokenFormat_CertificateNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; is not a valid audience (client id) on this server.
         /// </summary>
         internal static string Exception_JwtAccessTokenFormat_InvalidClientId {
@@ -70,7 +79,7 @@ namespace Spritely.Foundations.JwtOAuthServer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to JwtOAuthServerSettings allowedClients can only specify zero or one certificates to load - either a storeCertificate, relativeFileCertificate, or neither (for unencrypted JWT tokens), but not both..
+        ///   Looks up a localized string similar to JwtOAuthServerSettings allowedClients with Id &apos;{0}&apos; can only specify zero or one certificates to load - either a storeCertificate, relativeFileCertificate, or neither (for unencrypted JWT tokens), but not both..
         /// </summary>
         internal static string Exception_JwtAccessTokenFormat_MultipleCertificateOptionsProvided {
             get {

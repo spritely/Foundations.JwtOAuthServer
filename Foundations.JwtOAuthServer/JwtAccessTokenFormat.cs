@@ -28,10 +28,12 @@ namespace Spritely.Foundations.JwtOAuthServer
         private readonly JwtOAuthServerSettings serverSettings;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="JwtAccessTokenFormat"/> class.
+        /// Initializes a new instance of the <see cref="JwtAccessTokenFormat" /> class.
         /// </summary>
         /// <param name="serverSettings">The server settings.</param>
-        /// <exception cref="System.ArgumentNullException">If any arguments are null.</exception>
+        /// <exception cref="System.ArgumentNullException">If serverSettings is null.</exception>
+        /// <exception cref="System.InvalidOperationException">If serverSettings configuration is invalid.</exception>
+        /// <exception cref="System.FormatException">If a client secret is not base 64 url encoded.</exception>
         public JwtAccessTokenFormat(JwtOAuthServerSettings serverSettings)
         {
             if (serverSettings == null)
@@ -40,6 +42,29 @@ namespace Spritely.Foundations.JwtOAuthServer
             }
 
             this.serverSettings = serverSettings;
+
+            foreach (var client in this.serverSettings.AllowedClients)
+            {
+                if (client.RelativeFileCertificate != null && client.StoreCertificate != null)
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Messages.Exception_JwtAccessTokenFormat_MultipleCertificateOptionsProvided, client.Id));
+                }
+
+                var certificateFetcher = GetCertificateFetcher(client);
+
+                if (certificateFetcher != null)
+                {
+                    var certificate = certificateFetcher.Fetch();
+
+                    if (certificate == null)
+                    {
+                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Messages.Exception_JwtAccessTokenFormat_CertificateNotFound, client.Id));
+                    }
+                }
+
+                // Try decoding each secret early to detect if there is a configuration problem
+                TextEncodings.Base64Url.Decode(client.Secret);
+            }
         }
 
         /// <summary>
@@ -74,11 +99,6 @@ namespace Spritely.Foundations.JwtOAuthServer
                     Messages.Exception_JwtAccessTokenFormat_InvalidClientId, clientId));
             }
 
-            if (client.RelativeFileCertificate != null && client.StoreCertificate != null)
-            {
-                throw new InvalidOperationException(Messages.Exception_JwtAccessTokenFormat_MultipleCertificateOptionsProvided);
-            }
-
             var jwe = GetJwe(data, client, clientId);
 
             return jwe;
@@ -87,7 +107,8 @@ namespace Spritely.Foundations.JwtOAuthServer
         private string GetJwe(AuthenticationTicket data, JwtOAuthClient client, string clientId)
         {
             var certificateFetcher = GetCertificateFetcher(client);
-            var jwt = GetJwt(data, client, clientId);
+            var securityKey = TextEncodings.Base64Url.Decode(client.Secret);
+            var jwt = GetJwt(data, securityKey, clientId);
 
             var publicKey = certificateFetcher?.Fetch()?.PublicKey.Key as RSACryptoServiceProvider;
 
@@ -110,10 +131,8 @@ namespace Spritely.Foundations.JwtOAuthServer
             return certificateFetcher;
         }
 
-        private string GetJwt(AuthenticationTicket data, JwtOAuthClient client, string clientId)
+        private string GetJwt(AuthenticationTicket data, byte[] securityKey, string clientId)
         {
-            var securityKey = TextEncodings.Base64Url.Decode(client.Secret);
-
             var issued = data.Properties.IssuedUtc?.UtcDateTime;
             var expires = data.Properties.ExpiresUtc?.UtcDateTime;
 

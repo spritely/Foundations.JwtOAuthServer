@@ -117,12 +117,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Exception_JwtAccessTokenFormat_CertificateNotFound" xml:space="preserve">
+    <value>Unable to load certificate specified by JwtOAuthServerSettings allowedClients with Id = '{0}'.</value>
+    <comment>0 - clientId</comment>
+  </data>
   <data name="Exception_JwtAccessTokenFormat_InvalidClientId" xml:space="preserve">
     <value>'{0}' is not a valid audience (client id) on this server</value>
     <comment>0 - clientId</comment>
   </data>
   <data name="Exception_JwtAccessTokenFormat_MultipleCertificateOptionsProvided" xml:space="preserve">
-    <value>JwtOAuthServerSettings allowedClients can only specify zero or one certificates to load - either a storeCertificate, relativeFileCertificate, or neither (for unencrypted JWT tokens), but not both.</value>
+    <value>JwtOAuthServerSettings allowedClients with Id '{0}' can only specify zero or one certificates to load - either a storeCertificate, relativeFileCertificate, or neither (for unencrypted JWT tokens), but not both.</value>
+    <comment>0 - clientId</comment>
   </data>
   <data name="Exception_JwtAccessTokenFormat_NoAudience" xml:space="preserve">
     <value>Authentication ticket does not have an audience (client id) property</value>

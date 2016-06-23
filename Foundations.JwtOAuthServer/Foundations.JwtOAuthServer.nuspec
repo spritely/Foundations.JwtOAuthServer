@@ -15,7 +15,7 @@
     <tags>Spritely OWIN WebApi JWT OAuth server project foundation</tags>
     <dependencies>
         <group>
-            <dependency id="Spritely.Foundations.WebApi" version="0.10.1" />
+            <dependency id="Spritely.Foundations.WebApi" version="0.11.0" />
         </group>
     </dependencies>
   </metadata>
