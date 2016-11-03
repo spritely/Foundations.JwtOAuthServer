@@ -80,8 +80,8 @@ namespace Spritely.Foundations.JwtOAuthServer
                 throw new ArgumentNullException(nameof(context));
             }
 
-            // This code may appear to be useful, but a side-effect of calling the Try methods is to
-            // set context.clientId
+            // This code may appear to not be useful, but a side-effect of calling the Try methods is
+            // to set context.clientId
             string clientId;
             string clientSecret;
             if (!context.TryGetBasicCredentials(out clientId, out clientSecret))
