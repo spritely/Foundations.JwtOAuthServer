@@ -11,11 +11,11 @@
     <projectUrl>https://github.com/spritely/Foundations.JwtOAuthServer</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Provides a default starting point for setting up a new JWT OAuth server which includes Its.Configuration and Its.Log with a set of classes that preconfigure numerous defaults. All you have to do is provide service setup and your actual authentication (one method implementation).</description>
-    <copyright>Copyright (C) 2016</copyright>
+    <copyright>Copyright (C) 2017</copyright>
     <tags>Spritely OWIN WebApi JWT OAuth server project foundation</tags>
     <dependencies>
         <group>
-            <dependency id="Spritely.Foundations.WebApi" version="0.14.3" />
+            <dependency id="Spritely.Foundations.WebApi" version="0.14.5" />
         </group>
     </dependencies>
   </metadata>
